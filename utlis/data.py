@@ -1,6 +1,6 @@
 import requests
 from datetime import timedelta
-from sqlalchemy import select, update, delete, or_, and_
+from sqlalchemy import select, delete, or_, and_
 from time import sleep
 
 from .app import db, app
