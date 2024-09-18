@@ -31,7 +31,7 @@ def class_to_json(device: DeviceInfo):
     }
     check_list = [
         "duid", "mac", "iaid",
-        "ipv4", "ipv6"
+        "ipv4", "ipv6", "logged_in"
     ]
     for key in check_list:
         if data[key] is None or len(data[key]) == 0:
