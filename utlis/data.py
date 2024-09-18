@@ -1,6 +1,6 @@
 import requests
 from datetime import timedelta
-from sqlalchemy import select, update, or_
+from sqlalchemy import select, update, delete, or_, and_
 from time import sleep
 
 from .app import db, app
@@ -98,22 +98,18 @@ def update_data():
         with app.app_context():
             data = get_data()
             for device in data:
-                stmt = select(DeviceInfo).where(or_(DeviceInfo.MAC == device.MAC, DeviceInfo.IAID == device.IAID))
-                result = db.session.execute(stmt)
-                if result.scalar() is not None:
-                    # 设备存在，构建更新语句
-                    update_stmt = update(DeviceInfo).where(
-                        (DeviceInfo.MAC == device.MAC) & (DeviceInfo.IAID == device.IAID)
-                    ).values(**{
-                        key: getattr(device, key)
-                        for key in device.__dict__.keys()
-                        if key != "id" and not key.startswith("_")
-                    })
-
-                    # 执行更新语句
-                    db.session.execute(update_stmt)
-                else:
-                    # 设备不存在，添加新设备
-                    db.session.add(device)
+                stmt = select(DeviceInfo).where(or_(
+                    and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
+                    and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
+                ))
+                result = db.session.execute(stmt).scalar()
+                if result is not None:
+                    # 设备存在，删除并重新插入
+                    delete_stmt = delete(DeviceInfo).where(or_(
+                        and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
+                        and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
+                    ))
+                    db.session.execute(delete_stmt)
+                db.session.add(device)
             db.session.commit()
         sleep(60)
