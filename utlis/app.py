@@ -34,7 +34,7 @@ def class_to_json(device: DeviceInfo):
         "ipv4", "ipv6", "logged_in"
     ]
     for key in check_list:
-        if data[key] is None or len(data[key]) == 0:
+        if data[key] is None or (isinstance(data, str) and len(data[key]) == 0):
             data.pop(key)
     return data
 

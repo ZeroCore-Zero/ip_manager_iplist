@@ -1,7 +1,6 @@
 import requests
 from datetime import timedelta
 from sqlalchemy import select, update, or_
-from threading import Thread
 from time import sleep
 
 from .app import db, app
@@ -118,7 +117,3 @@ def update_data():
                     db.session.add(device)
             db.session.commit()
         sleep(60)
-
-
-data_thread = Thread(target=update_data, name="update_data")
-data_thread.start()
