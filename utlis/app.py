@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 
 from .config import Config
+from .authentication import isLogged
 
 
 app = Flask(__name__)
@@ -25,7 +26,8 @@ def class_to_json(device: DeviceInfo):
         "ipv6": device.IPv6,
         "dhcp_expiry": device.IPv4_OutTime,  # 特例
         "onlinesecs": device.OnlineTime.total_seconds(),
-        "logged_in": device.isLogged
+        "logged_in": isLogged(device.IPv4)  # 临时解决，没想到有什么监听用户登录请求的其他方法（除了抓包）
+        # "logged_in": device.isLogged if device.isLogged is not None else isLogged(device.IPv4)
     }
     check_list = [
         "duid", "mac", "iaid",

@@ -13,4 +13,4 @@ class DeviceInfo(db.Model):
     IPv4_OutTime = db.Column(db.Integer)
     IPv6_OutTime = db.Column(db.Integer)
     OnlineTime = db.Column(db.Interval)
-    isLogged = db.Column(db.Boolean, default=False)
+    isLogged = db.Column(db.Boolean)
