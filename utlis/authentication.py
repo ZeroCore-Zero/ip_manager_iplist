@@ -10,23 +10,25 @@ def isLogged(ip: str):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     sock.bind((ip, 8080))
 
-    sock.settimeout(3)
+    sock.settimeout(5)
     try:
         sock.connect((des_ip, 80))
     except TimeoutError:
         return None
+    except OSError:
+        return None
+
     sock.sendall(data.encode())
     resp = b''
-    sock.settimeout(0.1)
     try:
         while True:
             resp += sock.recv(4096)
     except TimeoutError:
         sock.settimeout(None)
-    resp = resp.decode()
+    resp = resp.decode(errors='ignore')
     sock.close()
 
     for i in resp.split("\r\n"):
