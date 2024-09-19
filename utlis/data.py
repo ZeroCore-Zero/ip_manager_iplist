@@ -99,6 +99,8 @@ def update_data():
             data = get_data()
             for device in data:
                 stmt = select(DeviceInfo).where(or_(
+                    and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
+                    and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
                     and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
                     and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
                 ))
@@ -106,6 +108,8 @@ def update_data():
                 if result is not None:
                     # 设备存在，删除并重新插入
                     delete_stmt = delete(DeviceInfo).where(or_(
+                        and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
+                        and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
                         and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
                         and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
                     ))

@@ -3,7 +3,7 @@ import socket
 
 
 def isLogged(ip: str):
-    if ip is None:
+    if ip is None or not ip.startswith("10."):  # Eliminate strange address
         return None
     des_ip = "10.3.8.211"
     data = "GET /index HTTP/1.1\r\nHost: 10.3.8.211\r\n\r\n"
