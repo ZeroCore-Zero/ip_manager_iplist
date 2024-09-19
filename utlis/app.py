@@ -31,9 +31,13 @@ def class_to_json(devices: list[DeviceInfo]):
             "ipv4": device.IPv4,
             "ipv6": device.IPv6,
             "dhcp_expiry": device.IPv4_OutTime,  # 特例
-            "onlinesecs": device.OnlineTime.total_seconds()
+            "onlinesecs": device.OnlineTime
             # "logged_in": device.isLogged if device.isLogged is not None else isLogged(device.IPv4)
         }
+        try:
+            device_info["onlinesecs"] = device_info["onlinesecs"].total_seconds()
+        except AttributeError:
+            device_info["onlinesecs"] = None
         ip_list[device.IPv4] = device_info
         executers[executer_pool.submit(isLogged, device.IPv4)] = device.IPv4
         data.append(device_info)
