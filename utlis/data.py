@@ -95,36 +95,35 @@ def get_data():
 
 def update_data():
     new_data = []
-    with app.app_context():
-        try:
-            data = get_data()
-        except KeyError as e:
-            print(e)
-            return new_data
-        for device in data:
-            stmt = select(DeviceInfo).where(
-                DeviceInfo.HostName == device.HostName,
-                DeviceInfo.MAC == device.MAC,
-                DeviceInfo.IAID == device.IAID,
-                DeviceInfo.IPv4 == device.IPv4,
-                DeviceInfo.IPv6 == device.IPv6,
-                DeviceInfo.IPv4_DUID == device.IPv4_DUID,
-                DeviceInfo.IPv6_DUID == device.IPv6_DUID,
-                DeviceInfo.IPv4_OutTime == device.IPv4_OutTime,
-                DeviceInfo.IPv6_OutTime == device.IPv6_OutTime,
-                DeviceInfo.OnlineTime == device.OnlineTime
-            )
-            result = db.session.execute(stmt)
-            if len(result.scalars().all()) == 1:
-                continue  # 有且仅有一条数据，且与新数据完全相同，则跳过
-            delete_stmt = delete(DeviceInfo).where(or_(
-                and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
-                and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
-                and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
-                and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
-            ))
-            db.session.execute(delete_stmt)
-            db.session.add(device)
-            new_data.append(device)
-        db.session.commit()
+    try:
+        data = get_data()
+    except KeyError as e:
+        print(e)
         return new_data
+    for device in data:
+        stmt = select(DeviceInfo).where(
+            DeviceInfo.HostName == device.HostName,
+            DeviceInfo.MAC == device.MAC,
+            DeviceInfo.IAID == device.IAID,
+            DeviceInfo.IPv4 == device.IPv4,
+            DeviceInfo.IPv6 == device.IPv6,
+            DeviceInfo.IPv4_DUID == device.IPv4_DUID,
+            DeviceInfo.IPv6_DUID == device.IPv6_DUID,
+            DeviceInfo.IPv4_OutTime == device.IPv4_OutTime,
+            DeviceInfo.IPv6_OutTime == device.IPv6_OutTime,
+            DeviceInfo.OnlineTime == device.OnlineTime
+        )
+        result = db.session.execute(stmt)
+        if len(result.scalars().all()) == 1:
+            continue  # 有且仅有一条数据，且与新数据完全相同，则跳过
+        delete_stmt = delete(DeviceInfo).where(or_(
+            and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
+            and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
+            and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
+            and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
+        ))
+        db.session.execute(delete_stmt)
+        db.session.add(device)
+        new_data.append(device)
+    db.session.commit()
+    return new_data

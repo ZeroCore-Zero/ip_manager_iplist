@@ -12,9 +12,10 @@ async def handle_data():
     websocket = WebSocketServer()
     await websocket.start_server()
     while True:
-        new_data = update_data()
-        if len(new_data) > 0:
-            websocket.set_message(new_data)
+        with app.app_context():
+            new_data = update_data()
+            if len(new_data) > 0:
+                websocket.set_message(new_data)
         await asyncio.sleep(60)
 
 
