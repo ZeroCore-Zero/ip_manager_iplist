@@ -31,14 +31,14 @@ class WebSocketServer:
 
     def _format_devices_message(self, devices):
         message = f"{len(devices)} New Devices:\n"
-        message += "-" * 20
+        message += "-" * 20 + "\n"
         for device in devices:
             message += f"Hostname: {device.HostName}, OnlineTime: {device.OnlineTime}, {'Logged' if device.isLogged else 'Not Logged'}\n"
             message += f"MAC: {device.MAC}, IPv4: {device.IPv4}\n" if device.MAC else ""
             message += f"IAID: {device.IAID}, IPv6: {device.IPv6}\n" if device.IAID else ""
             message += f"DUID: {device.IPv4_DUID}, DHCP_Expiry: {device.IPv4_OutTime}\n"
             message += "-" * 10 + "\n"
-        message += "-" * 20
+        message += "-" * 20 + "\n"
         return message
 
     def set_message(self, devices):
