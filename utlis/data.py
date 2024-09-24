@@ -117,7 +117,7 @@ def update_data():
         if match_line == 0:
             new_data.append(device)
             db.session.add(device)
-        if match_line == 1:
+        elif match_line == 1:
             update_stmt = update(DeviceInfo).where(or_(
                 DeviceInfo.IPv4.isnot(None) & DeviceInfo.IPv4 == device.IPv4,
                 DeviceInfo.IPv6.isnot(None) & DeviceInfo.IPv6 == device.IPv6,
