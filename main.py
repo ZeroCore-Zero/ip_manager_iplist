@@ -9,7 +9,7 @@ from utlis.websocket import WebSocketServer
 
 
 async def handle_data():
-    websocket = WebSocketServer(host="127.0.0.1")
+    websocket = WebSocketServer()
     await websocket.start_server()
     while True:
         new_data = update_data()
