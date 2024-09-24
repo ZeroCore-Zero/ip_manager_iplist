@@ -14,8 +14,7 @@ async def handle_data():
     while True:
         new_data = update_data()
         if len(new_data) > 0:
-            pass
-        websocket.set_message(new_data)
+            websocket.set_message(new_data)
         await asyncio.sleep(60)
 
 
