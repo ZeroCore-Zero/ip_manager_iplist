@@ -1,6 +1,6 @@
 import requests
 from datetime import timedelta
-from sqlalchemy import select, delete, or_, and_
+from sqlalchemy import select, delete, update, or_, and_
 
 
 from .app import db, app
@@ -101,6 +101,7 @@ def update_data():
         print(e)
         return new_data
     for device in data:
+        # 如果有完全匹配的行，删除并插入
         stmt = select(DeviceInfo).where(
             DeviceInfo.HostName == device.HostName,
             DeviceInfo.MAC == device.MAC,
@@ -112,17 +113,26 @@ def update_data():
             DeviceInfo.IPv4_OutTime == device.IPv4_OutTime,
             DeviceInfo.IPv6_OutTime == device.IPv6_OutTime
         )
-        result = db.session.execute(stmt)
-        if len(result.scalars().all()) == 1:
-            continue  # 有且仅有一条数据，且与新数据完全相同，则跳过
-        delete_stmt = delete(DeviceInfo).where(or_(
-            and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
-            and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
-            and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
-            and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
-        ))
-        db.session.execute(delete_stmt)
-        db.session.add(device)
-        new_data.append(device)
+        match_line = len(db.session.execute(stmt).scalars().all())
+        if match_line == 0:
+            new_data.append(device)
+            db.session.add(device)
+        if match_line == 1:
+            update_stmt = update(DeviceInfo).where(or_(
+                DeviceInfo.IPv4.isnot(None) & DeviceInfo.IPv4 == device.IPv4,
+                DeviceInfo.IPv6.isnot(None) & DeviceInfo.IPv6 == device.IPv6,
+                DeviceInfo.MAC.isnot(None) & DeviceInfo.MAC == device.MAC,
+                DeviceInfo.IAID.isnot(None) & DeviceInfo.IAID == device.IAID
+            )).values(OnlineTime=device.OnlineTime)
+            db.session.execute(update_stmt)
+        else:
+            delete_stmt = delete(DeviceInfo).where(or_(
+                and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
+                and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
+                and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
+                and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
+            ))
+            db.session.execute(delete_stmt)
+            db.session.add(device)
     db.session.commit()
     return new_data
