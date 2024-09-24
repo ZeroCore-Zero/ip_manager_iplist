@@ -1,7 +1,7 @@
 import requests
 from datetime import timedelta
 from sqlalchemy import select, delete, or_, and_
-from time import sleep
+
 
 from .app import db, app
 from .database import DeviceInfo
@@ -69,7 +69,7 @@ def get_data():
     resp = requests.get(arp_url)
     arp_data = parse_arp(resp.text)
 
-    device_data = dhcpv4_data.copy()  # deprecated var dhcpv4_data below
+    device_data = dhcpv4_data.copy()
     lookup = {device.HostName: device for device in dhcpv4_data if device.MAC}
     for device in dhcpv6_data:
         if device.HostName in lookup and lookup[device.HostName].IPv6 is None:
@@ -85,35 +85,46 @@ def get_data():
         "ipv6": {device.IPv6: device for device in device_data if device.IPv6 is not None}
     }
     for device in arp_data:
-        if device.IPv4 in lookup["ipv4"]:
+        if device.IPv4 in lookup["ipv4"] and device.IPv4 is not None:
             lookup["ipv4"][device.IPv4].OnlineTime = device.OnlineTime
-        else:
+        elif device.IPv6 is not None:
             lookup["ipv6"][device.IPv6].OnlineTime = device.OnlineTime
 
     return device_data
 
 
 def update_data():
-    while True:
-        with app.app_context():
+    new_data = []
+    with app.app_context():
+        try:
             data = get_data()
-            for device in data:
-                stmt = select(DeviceInfo).where(or_(
-                    and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
-                    and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
-                    and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
-                    and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
-                ))
-                result = db.session.execute(stmt).scalar()
-                if result is not None:
-                    # 设备存在，删除并重新插入
-                    delete_stmt = delete(DeviceInfo).where(or_(
-                        and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
-                        and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
-                        and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
-                        and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
-                    ))
-                    db.session.execute(delete_stmt)
-                db.session.add(device)
-            db.session.commit()
-        sleep(60)
+        except KeyError as e:
+            print(e)
+            return new_data
+        for device in data:
+            stmt = select(DeviceInfo).where(
+                DeviceInfo.HostName == device.HostName,
+                DeviceInfo.MAC == device.MAC,
+                DeviceInfo.IAID == device.IAID,
+                DeviceInfo.IPv4 == device.IPv4,
+                DeviceInfo.IPv6 == device.IPv6,
+                DeviceInfo.IPv4_DUID == device.IPv4_DUID,
+                DeviceInfo.IPv6_DUID == device.IPv6_DUID,
+                DeviceInfo.IPv4_OutTime == device.IPv4_OutTime,
+                DeviceInfo.IPv6_OutTime == device.IPv6_OutTime,
+                DeviceInfo.OnlineTime == device.OnlineTime
+            )
+            result = db.session.execute(stmt)
+            if len(result.scalars().all()) == 1:
+                continue  # 有且仅有一条数据，且与新数据完全相同，则跳过
+            delete_stmt = delete(DeviceInfo).where(or_(
+                and_(DeviceInfo.IPv4.isnot(None), DeviceInfo.IPv4 == device.IPv4),
+                and_(DeviceInfo.IPv6.isnot(None), DeviceInfo.IPv6 == device.IPv6),
+                and_(DeviceInfo.MAC.isnot(None), DeviceInfo.MAC == device.MAC),
+                and_(DeviceInfo.IAID.isnot(None), DeviceInfo.IAID == device.IAID)
+            ))
+            db.session.execute(delete_stmt)
+            db.session.add(device)
+            new_data.append(device)
+        db.session.commit()
+        return new_data
