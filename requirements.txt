@@ -4,3 +4,4 @@ lxml
 flask
 flask-cors
 flask-sqlalchemy
+websockets
