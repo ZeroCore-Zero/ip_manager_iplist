@@ -15,10 +15,9 @@ class WebSocketServer:
         while True:
             await asyncio.sleep(self.heartbeat_interval)
             if message_id == self.message_id:
-                message = "heartbeat"
-            else:
-                message_id = self.message_id
-                message = self.message
+                continue
+            message_id = self.message_id
+            message = self.message
             try:
                 await websocket.send(message)
                 print(f"send new_data to {websocket.remote_address}")
@@ -32,12 +31,14 @@ class WebSocketServer:
 
     def _format_devices_message(self, devices):
         message = f"{len(devices)} New Devices:\n"
+        message += "-" * 20
         for device in devices:
             message += f"Hostname: {device.HostName}, OnlineTime: {device.OnlineTime}, {'Logged' if device.isLogged else 'Not Logged'}\n"
             message += f"MAC: {device.MAC}, IPv4: {device.IPv4}\n" if device.MAC else ""
             message += f"IAID: {device.IAID}, IPv6: {device.IPv6}\n" if device.IAID else ""
             message += f"DUID: {device.IPv4_DUID}, DHCP_Expiry: {device.IPv4_OutTime}\n"
-            message += "\n"
+            message += "-" * 10 + "\n"
+        message += "-" * 20
         return message
 
     def set_message(self, devices):
