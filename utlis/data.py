@@ -110,8 +110,7 @@ def update_data():
             DeviceInfo.IPv4_DUID == device.IPv4_DUID,
             DeviceInfo.IPv6_DUID == device.IPv6_DUID,
             DeviceInfo.IPv4_OutTime == device.IPv4_OutTime,
-            DeviceInfo.IPv6_OutTime == device.IPv6_OutTime,
-            DeviceInfo.OnlineTime == device.OnlineTime
+            DeviceInfo.IPv6_OutTime == device.IPv6_OutTime
         )
         result = db.session.execute(stmt)
         if len(result.scalars().all()) == 1:
