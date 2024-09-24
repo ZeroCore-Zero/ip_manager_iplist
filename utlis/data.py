@@ -3,7 +3,7 @@ from datetime import timedelta
 from sqlalchemy import select, delete, update, or_, and_
 
 
-from .app import db, app
+from .app import db
 from .database import DeviceInfo
 
 
